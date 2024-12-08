@@ -1,7 +1,10 @@
 from airflow.decorators import dag, task
+import pendulum
 
 @dag(
     dag_id="clear_s3_buckets",
+    schedule=None,
+    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
     tags=["services"]
 )
