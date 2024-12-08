@@ -25,7 +25,7 @@ def extract_job_skils_taskflow_api():
             's3',
             aws_access_key_id='accessKey1',
             aws_secret_access_key='verySecretKey1',
-            endpoint_url='http://127.0.0.1:8000'
+            endpoint_url='http://10.0.0.30:8000/'
         )
 
         client.create_bucket(Bucket='csv_raw_chunks')
