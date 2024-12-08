@@ -30,7 +30,7 @@ def extract_job_skils_taskflow_api():
 
         bucket_name = 'csvrawchunks'
 
-        client.create_bucket(bucket_name)
+        client.create_bucket(Bucket=bucket_name)
 
         def upload_s3_file(file_name, bucket, object_name=None):
             if object_name is None:
