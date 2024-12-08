@@ -148,4 +148,7 @@ def extract_job_skils_taskflow_api():
     job_posting = import_jobposting_chunks_to_s3()
     job_summary = import_job_summary_to_s3()
 
+    [job_skills, job_posting, job_summary]
+
 extract_job_skils_taskflow_api()
+
