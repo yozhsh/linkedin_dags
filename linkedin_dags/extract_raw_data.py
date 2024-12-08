@@ -144,6 +144,7 @@ def extract_linkedin_ds_s3():
                 chunk.to_csv(csv_batch_name, index=False)
                 upload_s3_file(csv_batch_name, bucket_name)
                 os.remove('/home/vagrant/airflow/jobsummary_chunk_{}.csv'.format(batch_no))
+                batch_no +=1
             except pd.errors.ParserError:
                 batch_no +=1
                 continue
