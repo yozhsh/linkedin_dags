@@ -54,6 +54,7 @@ def extract_job_skils_taskflow_api():
             csv_batch_name = 'job_skills_chunk_{}.csv'.format(batch_no)
             chunk.to_csv(csv_batch_name, index=False)
             upload_s3_file(csv_batch_name, bucket_name)
+            os.remove('/home/vagrant/airflow/job_skills_chunk_{}.csv'.format(batch_no))
             batch_no +=1
 
         
