@@ -105,6 +105,7 @@ def extract_linkedin_ds_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
+        import csv
 
         csv_path = '/home/vagrant/airflow/job_summary.csv'
 
@@ -136,7 +137,7 @@ def extract_linkedin_ds_s3():
         
         chunksize = 100
         batch_no = 1
-        for chunk in pd.read_csv(csv_path, chunksize=chunksize, error_bad_lines=False):
+        for chunk in pd.read_csv(csv_path, chunksize=chunksize, error_bad_lines=False, quoting=csv.QUOTE_NONE):
             csv_batch_name = 'jobsummary_chunk_{}.csv'.format(batch_no)
             chunk.to_csv(csv_batch_name, index=False)
             upload_s3_file(csv_batch_name, bucket_name)
