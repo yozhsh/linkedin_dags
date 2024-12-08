@@ -8,7 +8,6 @@ import pendulum
     catchup=False,
     tags=["services"],
 )
-
 def clear_s3():
     @task()
     def clear_all_buckets():
@@ -28,4 +27,4 @@ def clear_s3():
 
     # clear_bucket('')
     clear_all_buckets()
-clear_s3()
+_ = clear_s3()

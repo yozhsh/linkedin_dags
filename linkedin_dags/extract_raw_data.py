@@ -12,7 +12,6 @@ from airflow.decorators import dag, task
     catchup=False,
     tags=["extract"],
 )
-
 def extract_linkedin_ds_s3():
 
     @task()
@@ -156,5 +155,5 @@ def extract_linkedin_ds_s3():
     
     
 
-extract_linkedin_ds_s3()
+_ = extract_linkedin_ds_s3()
 
