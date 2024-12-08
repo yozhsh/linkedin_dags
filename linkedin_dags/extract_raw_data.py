@@ -106,7 +106,7 @@ def extract_linkedin_ds_s3():
             batch_no +=1
         
     @task()
-    def import_job_summary_to_s3():
+    def import_job_summary_chunks_to_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
@@ -149,11 +149,11 @@ def extract_linkedin_ds_s3():
             batch_no +=1
         
 
-    # job_skills = import_jobskills_chunks_to_s3()
-    # job_posting = import_jobposting_chunks_to_s3()
-    # job_summary = import_job_summary_to_s3()
+    job_skills = import_jobskills_chunks_to_s3()
+    job_posting = import_jobposting_chunks_to_s3()
+    job_summary = import_job_summary_chunks_to_s3()
 
-    start_extract_linkedin >> [import_jobskills_chunks_to_s3, import_jobposting_chunks_to_s3, import_job_summary_to_s3]
+    
     
 
 extract_linkedin_ds_s3()
