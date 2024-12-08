@@ -28,7 +28,9 @@ def extract_job_skils_taskflow_api():
             endpoint_url='http://10.0.0.30:8000/'
         )
 
-        client.create_bucket(Bucket='csv_raw_chunks')
+        bucket_name = 'csvrawchunks'
+
+        client.create_bucket(bucket_name)
 
         def upload_s3_file(file_name, bucket, object_name=None):
             if object_name is None:
@@ -50,7 +52,7 @@ def extract_job_skils_taskflow_api():
         for chunk in pd.read_csv(csv_path, chunksize=chunksize):
             csv_batch_name = 'job_skills_chunk_{}.csv'.format(batch_no)
             chunk.to_csv(csv_batch_name, index=False)
-            upload_s3_file(csv_batch_name, bucket='csv_raw_chunks')
+            upload_s3_file(csv_batch_name, bucket_name)
             batch_no +=1
 
         
