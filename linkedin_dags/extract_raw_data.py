@@ -149,9 +149,9 @@ def extract_linkedin_ds_s3():
             batch_no +=1
         
 
-    job_skills = import_jobskills_chunks_to_s3()
-    job_posting = import_jobposting_chunks_to_s3()
-    job_summary = import_job_summary_chunks_to_s3()
+    import_jobskills_chunks_to_s3()
+    import_jobposting_chunks_to_s3()
+    import_job_summary_chunks_to_s3()
 
     
     
