@@ -19,7 +19,7 @@ def extract_job_skils_taskflow_api():
         import boto3
         from botocore.exceptions import ClientError
 
-        csv_path = '/home/vagrant/job_skills.csv'
+        csv_path = '/home/vagrant/airflow/job_skills.csv'
 
         client = boto3.client(
             's3',
