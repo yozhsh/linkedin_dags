@@ -100,7 +100,7 @@ def extract_job_skils_taskflow_api():
             os.remove('/home/vagrant/airflow/jobposting_chunk_{}.csv'.format(batch_no))
             batch_no +=1
         
-    task()
+    @task()
     def import_job_summary_to_s3():
         import pandas as pd
         import boto3
