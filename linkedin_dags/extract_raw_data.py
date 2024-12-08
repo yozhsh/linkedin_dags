@@ -15,7 +15,7 @@ from airflow.decorators import dag, task
 
 def extract_job_skils_taskflow_api():
     @task()
-    def import_csv_to_db():
+    def import_jobskills_chunks_to_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
@@ -29,7 +29,7 @@ def extract_job_skils_taskflow_api():
             endpoint_url='http://10.0.0.30:8000/'
         )
 
-        bucket_name = 'csvrawchunks'
+        bucket_name = 'jobskillchunks'
 
         client.create_bucket(Bucket=bucket_name)
 
@@ -48,7 +48,7 @@ def extract_job_skils_taskflow_api():
 
 
         
-        chunksize = 100
+        chunksize = 10
         batch_no = 1
         for chunk in pd.read_csv(csv_path, chunksize=chunksize):
             csv_batch_name = 'job_skills_chunk_{}.csv'.format(batch_no)
@@ -57,8 +57,94 @@ def extract_job_skils_taskflow_api():
             os.remove('/home/vagrant/airflow/job_skills_chunk_{}.csv'.format(batch_no))
             batch_no +=1
 
+    def import_jobposting_chunks_to_s3():
+        import pandas as pd
+        import boto3
+        from botocore.exceptions import ClientError
+
+        csv_path = '/home/vagrant/airflow/job_posting.csv'
+
+        client = boto3.client(
+            's3',
+            aws_access_key_id='accessKey1',
+            aws_secret_access_key='verySecretKey1',
+            endpoint_url='http://10.0.0.30:8000/'
+        )
+
+        bucket_name = 'jobpostingchunks'
+
+        client.create_bucket(Bucket=bucket_name)
+
+        def upload_s3_file(file_name, bucket, object_name=None):
+            if object_name is None:
+                object_name = os.path.basename(file_name)
+
+            # Upload the file
+            s3_client = boto3.client('s3')
+            try:
+                response = client.upload_file(file_name, bucket, object_name)
+            except ClientError as e:
+                print(e)
+                return False
+            return True
+
+
+        
+        chunksize = 10
+        batch_no = 1
+        for chunk in pd.read_csv(csv_path, chunksize=chunksize):
+            csv_batch_name = 'jobposting_chunk_{}.csv'.format(batch_no)
+            chunk.to_csv(csv_batch_name, index=False)
+            upload_s3_file(csv_batch_name, bucket_name)
+            os.remove('/home/vagrant/airflow/jobposting_chunk_{}.csv'.format(batch_no))
+            batch_no +=1
         
 
-    job_skills = import_csv_to_db()
+    def import_job_summary_to_s3():
+        import pandas as pd
+        import boto3
+        from botocore.exceptions import ClientError
+
+        csv_path = '/home/vagrant/airflow/job_summary.csv'
+
+        client = boto3.client(
+            's3',
+            aws_access_key_id='accessKey1',
+            aws_secret_access_key='verySecretKey1',
+            endpoint_url='http://10.0.0.30:8000/'
+        )
+
+        bucket_name = 'jobsummarychunks'
+
+        client.create_bucket(Bucket=bucket_name)
+
+        def upload_s3_file(file_name, bucket, object_name=None):
+            if object_name is None:
+                object_name = os.path.basename(file_name)
+
+            # Upload the file
+            s3_client = boto3.client('s3')
+            try:
+                response = client.upload_file(file_name, bucket, object_name)
+            except ClientError as e:
+                print(e)
+                return False
+            return True
+
+
+        
+        chunksize = 10
+        batch_no = 1
+        for chunk in pd.read_csv(csv_path, chunksize=chunksize):
+            csv_batch_name = 'jobsummary_chunk_{}.csv'.format(batch_no)
+            chunk.to_csv(csv_batch_name, index=False)
+            upload_s3_file(csv_batch_name, bucket_name)
+            os.remove('/home/vagrant/airflow/jobsummary_chunk_{}.csv'.format(batch_no))
+            batch_no +=1
+        
+
+    job_skills = import_jobskills_chunks_to_s3()
+    job_posting = import_jobposting_chunks_to_s3()
+    job_summary = import_job_summary_to_s3()
 
 extract_job_skils_taskflow_api()
