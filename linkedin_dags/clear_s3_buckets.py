@@ -27,4 +27,5 @@ def clear_s3():
     #     bucket.objects.all().delete()    
 
     # clear_bucket('')
+    clear_all_buckets()
 clear_s3()
