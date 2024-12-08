@@ -15,10 +15,6 @@ from airflow.decorators import dag, task
 def extract_linkedin_ds_s3():
 
     @task()
-    def start_extract_linkedin():
-        print("START EXTRACT LINKEDIN DATASET")
-
-    @task()
     def import_jobskills_chunks_to_s3():
         import pandas as pd
         import boto3
