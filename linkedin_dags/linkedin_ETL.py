@@ -198,7 +198,9 @@ def etl():
             download_path = '/tmp/{}'.format(filename)
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
-            print(df)
+            job_skills = df.get('job_skills').split(',')
+            print(job_skills)
+
 
 
 
