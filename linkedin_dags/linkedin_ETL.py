@@ -193,8 +193,11 @@ def etl():
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
 
-        for chunk in bucket.objects.all():
-            df = pd.read_csv(chunk)
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
             print(df)
 
 
