@@ -1,4 +1,5 @@
 import json
+import sys
 
 import pendulum
 import os
@@ -6,6 +7,8 @@ import os
 from airflow.decorators import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
+
+sys.path.append('linkedin_dags/utils')
 
 @dag(
     dag_id="LinkedinETL",
