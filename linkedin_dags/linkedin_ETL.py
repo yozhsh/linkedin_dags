@@ -219,8 +219,7 @@ def etl():
                 
             # )
             try: 
-                print("")
-                # lst_of_str = parse_string(job_skills[0])
+                lst_of_str = parse_string(job_skills[0])
                 # print(lst_of_str)
                 # print(type(lst_of_str))
             except AttributeError:
