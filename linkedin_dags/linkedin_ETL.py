@@ -16,11 +16,11 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 )
 def etl():
 
-    create_table_skills = SQLExecuteQueryOperator(
-            task_id="create_table_skills",
-            sql="create_skills.sql",
-            return_last=False
-        )
+    # create_table_skills = SQLExecuteQueryOperator(
+    #         task_id="create_table_skills",
+    #         sql="create_skills.sql",
+    #         return_last=False
+    #     )
     
 
     @task()
@@ -160,7 +160,7 @@ def etl():
 
     @task()
     def transform_jobskills_chunk_to_db():
-        from .utils import s3client
+        from utils.s3 import s3client
         import pandas as pd
 
         s3 = s3client()
