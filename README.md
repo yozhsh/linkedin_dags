@@ -12,11 +12,11 @@ Job table:
     (job_level)level
     (job_type)type
     (job_summary)summary(text)
+    company_table_id
 
 Company table:
     id
     name
-    jobs (one to many)
 
 Skills:
     id
