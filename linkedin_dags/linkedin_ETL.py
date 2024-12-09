@@ -245,26 +245,29 @@ def etl():
                 lst_of_str = parse_string(job_skills[0])
                 try:
                     for skill in lst_of_str:
-                        execute_values(
-                        cursor,
-                        "INSERT INTO skills (name) VALUES %s",
-                        skill
-                    )
+                    #     execute_values(
+                    #     cursor,
+                    #     "INSERT INTO skills (name) VALUES %s",
+                    #     skill
+                    # )
+                        print(skill)
                         
                 except errors.lookup(UNIQUE_VIOLATION):
                     continue
 
             except AttributeError:
                 try:
-                    execute_values(
-                        cursor,
-                        "INSERT INTO skills (name) VALUES %s",
-                        lst_of_str
-                    )
+                    for skill in lst_of_str:
+                    #     execute_values(
+                    #     cursor,
+                    #     "INSERT INTO skills (name) VALUES %s",
+                    #     skill
+                    # )
+                        print(skill)
                 except errors.lookup(UNIQUE_VIOLATION):
                     continue
         
-        cursor.commit()
+        # cursor.commit()
         cursor.close()
 
 
