@@ -224,6 +224,7 @@ def etl():
                 # print(type(lst_of_str))
             except AttributeError:
                 print(type(lst_of_str))
+                print(lst_of_str)
 
 
 
