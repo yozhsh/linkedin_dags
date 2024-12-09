@@ -253,7 +253,9 @@ def etl():
                         "INSERT INTO skills (name) VALUES %s",
                         skill
                     )
+                        dbclient.commit()
                 except errors.lookup(UNIQUE_VIOLATION):
+                    dbclient.rollback()
                     continue
 
             except AttributeError:
@@ -264,10 +266,11 @@ def etl():
                         "INSERT INTO skills (name) VALUES %s",
                         skill
                     )
+                        dbclient.commit()
                 except errors.lookup(UNIQUE_VIOLATION):
+                    dbclient.rollback()
                     continue
         
-        dbclient.commit()
         cursor.close()
         dbclient.close()
 
