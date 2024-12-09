@@ -11,7 +11,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 def s3client():
     import boto3
 
-    client = boto3.client(
+    client = boto3.resource(
             's3',
             aws_access_key_id='accessKey1',
             aws_secret_access_key='verySecretKey1',
