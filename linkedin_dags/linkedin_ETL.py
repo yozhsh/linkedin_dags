@@ -4,18 +4,27 @@ import pendulum
 import os
 
 from airflow.decorators import dag, task
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
 
 @dag(
-    dag_id="extract_linkedin_DS",
+    dag_id="LinkedinETL",
     schedule=None,
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
     tags=["extract"],
 )
-def extract_linkedin_ds_s3():
+def etl():
+
+    create_table_skills = SQLExecuteQueryOperator(
+            task_id="create_table_skills",
+            sql="create_skills.sql",
+            return_last=False
+        )
+    
 
     @task()
-    def import_jobskills_chunks_to_s3():
+    def extract_jobskills_chunks_to_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
@@ -58,7 +67,7 @@ def extract_linkedin_ds_s3():
             batch_no +=1
 
     @task()
-    def import_jobposting_chunks_to_s3():
+    def extract_jobposting_chunks_to_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
@@ -101,7 +110,7 @@ def extract_linkedin_ds_s3():
             batch_no +=1
         
     @task()
-    def import_job_summary_chunks_to_s3():
+    def extract_job_summary_chunks_to_s3():
         import pandas as pd
         import boto3
         from botocore.exceptions import ClientError
@@ -147,14 +156,35 @@ def extract_linkedin_ds_s3():
             os.remove('/home/vagrant/airflow/jobsummary_chunk_{}.csv'.format(batch_no))
             batch_no +=1
 
-        
+    
 
-    import_jobskills_chunks_to_s3()
-    import_jobposting_chunks_to_s3()
-    import_job_summary_chunks_to_s3()
+    @task()
+    def transform_jobskills_chunk_to_db():
+        from .utils import s3client
+        import pandas as pd
 
+        s3 = s3client()
+        bucket = s3.Bucket('jobskillchunks')
+
+        for chunk in bucket.objects.all():
+            df = pd.read_csv(chunk)
+            print(df)
+
+
+
+
+
+
+
+
+
+    # extract_jobskills_chunks_to_s3() >> create_table_skills >> transform_jobskills_chunk_to_db() 
+    # extract_jobposting_chunks_to_s3()
+    # extract_job_summary_chunks_to_s3()
+
+    transform_jobskills_chunk_to_db()
     
     
 
-_ = extract_linkedin_ds_s3()
+etl()
 
