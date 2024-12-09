@@ -201,9 +201,9 @@ def etl():
         cursor = dbclient.cursor()
         cursor.execute(
             '''CREATE TABLE IF NOT EXISTS skills (
-                id SERIAL PRIMARY KEY
+                id SERIAL PRIMARY KEY,
                 name VARCHAR (255) NOT NULL UNIQUE
-            )'''
+            );'''
         )
         cursor.close()
 
