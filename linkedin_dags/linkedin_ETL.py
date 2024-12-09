@@ -192,6 +192,17 @@ def etl():
     @task()
     def transform_jobskills_chunk_to_db():
         import pandas as pd
+        # import psycopg2
+        # from psycopg2.extras import execute_values
+
+
+        # dbclient = psycopg2.connect(
+        #     database='etl_raw_data',
+        #     user='airflow_user',
+        #     password='eserloqpbeq',
+        #     host='10.0.0.20'
+        #     )
+        # cursor = dbclient.cursor()
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
@@ -202,9 +213,17 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             job_skills = df.get('job_skills').to_dict()
-            print(parse_string(job_skills[0]))
-
-
+            # execute_values(
+            #     cursor,
+            #     "INSERT INTO skills (name) VALUES %s",
+                
+            # )
+            try: 
+                lst_of_str = parse_string(job_skills[0])
+                print(lst_of_str)
+                print(type(lst_of_str))
+            except AttributeError:
+                print(type(lst_of_str))
 
 
 
