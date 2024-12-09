@@ -188,21 +188,49 @@ def etl():
             batch_no +=1
 
     
+    @task()
+    def prepare_db_to_jobskill_transform():
+        import psycopg2
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS skills (
+                id      integer primary_key
+                name    text not null unique
+            )'''
+        )
+        cursor.close()
+
+        
+#         CREATE TABLE IF NOT EXISTS skills (
+#     id      integer primary key,
+#     name    text not null, unique
+# )
+
 
     @task()
     def transform_jobskills_chunk_to_db():
         import pandas as pd
-        # import psycopg2
-        # from psycopg2.extras import execute_values
+        import psycopg2
+        from psycopg2.extras import execute_values
+        from psycopg2 import errors
+        from psycopg2.errorcodes import UNIQUE_VIOLATION
 
 
-        # dbclient = psycopg2.connect(
-        #     database='etl_raw_data',
-        #     user='airflow_user',
-        #     password='eserloqpbeq',
-        #     host='10.0.0.20'
-        #     )
-        # cursor = dbclient.cursor()
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
@@ -213,18 +241,28 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             job_skills = df.get('job_skills').to_dict()
-            # execute_values(
-            #     cursor,
-            #     "INSERT INTO skills (name) VALUES %s",
-                
-            # )
             try: 
                 lst_of_str = parse_string(job_skills[0])
-                # print(lst_of_str)
-                # print(type(lst_of_str))
+                try:
+                    execute_values(
+                        cursor,
+                        "INSERT INTO skills (name) VALUES %s",
+                        lst_of_str
+                    )
+                except errors.lookup(UNIQUE_VIOLATION):
+                    continue
+
             except AttributeError:
-                print(type(lst_of_str))
-                print(lst_of_str)
+                try:
+                    execute_values(
+                        cursor,
+                        "INSERT INTO skills (name) VALUES %s",
+                        lst_of_str
+                    )
+                except errors.lookup(UNIQUE_VIOLATION):
+                    continue
+        
+        cursor.close()
 
 
 

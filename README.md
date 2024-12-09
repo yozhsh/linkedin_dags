@@ -20,7 +20,7 @@ Company table:
 
 Skills:
     id
-    name
+    name unique
 
 SkillsToJob:
     id
