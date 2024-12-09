@@ -21,3 +21,8 @@ Company table:
 Skills:
     id
     name
+
+SkillsToJob:
+    id
+    skill_id
+    job_id
