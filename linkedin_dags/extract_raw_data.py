@@ -137,10 +137,12 @@ def extract_linkedin_ds_s3():
         
         chunksize = 100
         batch_no = 1
+        #skiprows
+
     
-        for chunk in pd.read_csv(csv_path, chunksize=chunksize, quoting=3, error_bad_lines=False):
+        for chunk in pd.read_csv(csv_path, chunksize=chunksize):
             csv_batch_name = 'jobsummary_chunk_{}.csv'.format(batch_no)
-            chunk.to_csv(csv_batch_name, index=False, quoting=3)
+            chunk.to_csv(csv_batch_name, index=False)
             upload_s3_file(csv_batch_name, bucket_name)
             os.remove('/home/vagrant/airflow/jobsummary_chunk_{}.csv'.format(batch_no))
             batch_no +=1
