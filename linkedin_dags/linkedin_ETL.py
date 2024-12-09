@@ -205,8 +205,10 @@ def etl():
                 name VARCHAR (255) NOT NULL UNIQUE
             );'''
         )
-        cursor.commit()
+        
+        dbclient.commit()
         cursor.close()
+        dbclient.close()
 
         
 #         CREATE TABLE IF NOT EXISTS skills (
