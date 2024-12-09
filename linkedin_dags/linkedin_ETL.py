@@ -267,8 +267,9 @@ def etl():
                 except errors.lookup(UNIQUE_VIOLATION):
                     continue
         
-        # cursor.commit()
+        dbclient.commit()
         cursor.close()
+        dbclient.close()
 
 
 
