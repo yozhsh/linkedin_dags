@@ -35,6 +35,9 @@ def upload_s3_file(s3client, file_name, bucket, object_name=None):
             return True
 
 
+def parse_string(csv_string):
+    return csv_string.split(",")
+
 @dag(
     dag_id="LinkedinETL",
     schedule=None,
@@ -199,7 +202,7 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             job_skills = df.get('job_skills').to_json()
-            print(job_skills)
+            print(parse_string(job_skills['0']))
 
 
 
