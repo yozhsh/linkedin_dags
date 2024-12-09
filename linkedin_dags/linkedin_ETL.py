@@ -201,8 +201,8 @@ def etl():
             download_path = '/tmp/{}'.format(filename)
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
-            job_skills = df.get('job_skills').to_json()
-            print(parse_string(job_skills['0']))
+            job_skills = df.get('job_skills').to_dict()
+            print(parse_string(job_skills[0]))
 
 
 
