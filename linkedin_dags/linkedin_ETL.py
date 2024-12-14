@@ -244,13 +244,13 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             job_skills = df.get('job_skills').to_dict()
-            lst_of_str = parse_string(job_skills[0])
+            try:
+                lst_of_str = parse_string(job_skills[0])
+            except AttributeError:
+                continue
             for skill in lst_of_str:
-                try:
-                    print("SKILL\n")
-                    print(skill)
-                except AttributeError:
-                    continue
+                print("SKILL\n")
+                print(skill)
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
