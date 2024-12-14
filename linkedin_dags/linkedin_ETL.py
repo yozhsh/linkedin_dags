@@ -244,32 +244,24 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             job_skills = df.get('job_skills').to_dict()
-            try: 
-                lst_of_str = parse_string(job_skills[0])
-                try:
-                    for skill in lst_of_str:
-                        execute_values(
-                        cursor,
-                        "INSERT INTO skills (name) VALUES %s",
-                        skill
-                    )
-                        dbclient.commit()
-                except errors.lookup(UNIQUE_VIOLATION):
-                    dbclient.rollback()
-                    continue
-
-            except AttributeError:
-                try:
-                    for skill in lst_of_str:
-                        execute_values(
-                        cursor,
-                        "INSERT INTO skills (name) VALUES %s",
-                        skill
-                    )
-                        dbclient.commit()
-                except errors.lookup(UNIQUE_VIOLATION):
-                    dbclient.rollback()
-                    continue
+            lst_of_str = parse_string(job_skills[0])
+            for skill in lst_of_str:
+                print("SKILL\n")
+                print(skill)
+            # try: 
+            #     lst_of_str = parse_string(job_skills[0])
+            #     try:
+            #         for skill in lst_of_str:
+            #             execute_values(
+            #             cursor,
+            #             "INSERT INTO skills (name) VALUES %s",
+            #             skill
+            #         )
+            #             dbclient.commit()
+            #     except errors.lookup(UNIQUE_VIOLATION):
+            #         dbclient.rollback()
+            #         continue
+# Доделать, сохраняет побуквенно а не построчно :\
         
         cursor.close()
         dbclient.close()
