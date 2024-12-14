@@ -248,9 +248,20 @@ def etl():
                 lst_of_str = parse_string(job_skills[0])
             except AttributeError:
                 continue
+            
             for skill in lst_of_str:
                 print("SKILL\n")
                 print(skill)
+                execute_values(
+                        cursor,
+                        "INSERT INTO skills (name) VALUES %s",
+                        skill
+                    )
+                try:
+                    dbclient.commit()
+                except errors.lookup(UNIQUE_VIOLATION):
+                    dbclient.rollback()
+                    continue
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
