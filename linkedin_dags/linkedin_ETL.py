@@ -223,7 +223,7 @@ def etl():
         import psycopg2
         from psycopg2.extras import execute_values
         from psycopg2 import errors
-        from psycopg2.errorcodes import UNIQUE_VIOLATION
+        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION
 
 
 
@@ -254,15 +254,15 @@ def etl():
                     cursor.execute(
                         "INSERT INTO skills (name) VALUES (%s)",
                         (skill,))
-                    try:
-                        dbclient.commit()
-                        print("COMMIT\n ")
-                    except:
-                        dbclient.rollback()
-                        print("ROLLBACK\n")
-                        continue
+                    cursor.execute("commit")
                 except errors.lookup(UNIQUE_VIOLATION):
                     continue
+                except errors.lookup(IN_FAILED_SQL_TRANSACTION):
+                    cursor.execute("rollback")
+                    cursor.execute(
+                        "INSERT INTO skills (name) VALUES (%s)",
+                        (skill,))
+                    cursor.execute("commit")
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
