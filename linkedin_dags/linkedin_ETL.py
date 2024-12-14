@@ -255,14 +255,15 @@ def etl():
                         "INSERT INTO skills (name) VALUES (%s)",
                         (skill,))
                     cursor.execute("commit")
-                except errors.lookup(UNIQUE_VIOLATION):
-                    continue
                 except errors.lookup(IN_FAILED_SQL_TRANSACTION):
                     cursor.execute("rollback")
                     cursor.execute(
                         "INSERT INTO skills (name) VALUES (%s)",
                         (skill,))
-                    cursor.execute("commit")
+                    cursor.execute("commit")    
+                except errors.lookup(UNIQUE_VIOLATION):
+                    cursor.execute("rollback")
+                    continue
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
