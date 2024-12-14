@@ -246,8 +246,11 @@ def etl():
             job_skills = df.get('job_skills').to_dict()
             lst_of_str = parse_string(job_skills[0])
             for skill in lst_of_str:
-                print("SKILL\n")
-                print(skill)
+                try:
+                    print("SKILL\n")
+                    print(skill)
+                except AttributeError:
+                    continue
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
