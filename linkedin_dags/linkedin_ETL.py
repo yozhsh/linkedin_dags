@@ -250,20 +250,20 @@ def etl():
                 continue
 
             for skill in lst_of_str:
-                print("SKILL\n")
+                print("SKILL\n", type(skill))
                 print(skill)
-                try:
-                    execute_values(
-                            cursor,
-                            "INSERT INTO skills (name) VALUES %s",
-                            skill
-                        )
-                    try:
-                        dbclient.commit()
-                    except:
-                        dbclient.rollback()
-                except errors.lookup(UNIQUE_VIOLATION):
-                    continue
+                # try:
+                #     execute_values(
+                #             cursor,
+                #             "INSERT INTO skills (name) VALUES %s",
+                #             skill
+                #         )
+                #     try:
+                #         dbclient.commit()
+                #     except:
+                #         dbclient.rollback()
+                # except errors.lookup(UNIQUE_VIOLATION):
+                #     continue
             # try: 
             #     lst_of_str = parse_string(job_skills[0])
             #     try:
