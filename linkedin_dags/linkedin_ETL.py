@@ -447,8 +447,8 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             joblink = df.get('job_link')
-            dicted = joblink.to_dict()
-            print(dicted)
+            links = joblink.to_list()
+            print(links)
             break
         
         cursor.close()
