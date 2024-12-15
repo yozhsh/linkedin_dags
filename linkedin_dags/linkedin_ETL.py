@@ -392,6 +392,7 @@ def etl():
             joblink = df.get('job_link')
             links = joblink.to_json()
             print(links)
+            break
         
         cursor.close()
         dbclient.close()
