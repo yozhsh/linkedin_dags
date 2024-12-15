@@ -223,7 +223,7 @@ def etl():
         import psycopg2
         from psycopg2.extras import execute_values
         from psycopg2 import errors
-        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION
+        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION, STRING_DATA_RIGHT_TRUNCATION
 
 
 
@@ -262,6 +262,9 @@ def etl():
                         (skill,))
                     cursor.execute("commit")    
                 except errors.lookup(UNIQUE_VIOLATION):
+                    cursor.execute("rollback")
+                    continue
+                except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
                     cursor.execute("rollback")
                     continue
             # try: 
