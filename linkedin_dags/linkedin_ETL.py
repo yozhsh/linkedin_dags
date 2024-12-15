@@ -6,7 +6,6 @@ import os
 from airflow.decorators import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
-# в майбутньому додати класс для мапінгу csv до классу
 
 def s3client():
     import boto3
@@ -283,6 +282,13 @@ def etl():
             )'''
         )
 
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS summary (
+                id SERIAL PRIMARY KEY,
+                name TEXT
+            )'''
+        )
+
         dbclient.commit()
 
         cursor.execute(
@@ -294,7 +300,8 @@ def etl():
                 search_city VARCHAR (255),
                 level VARCHAR(255),
                 type VARCHAR (255),
-                summary TEXT,
+                got_summary BOOLEAN NOT NULL
+                summary_id INTEGER REFERENCES summary
                 company_id INTEGER REFERENCES company 
             )'''
         )
@@ -302,34 +309,41 @@ def etl():
         cursor.close()
         dbclient.close()
 
-    @task()
-    def transform_jobposting_chunk_to_db():
-        import pandas as pd
-        import psycopg2
+    # @task()
+    # def transform_jobposting_chunk_to_db():
+    #     import pandas as pd
+    #     import psycopg2
 
-        dbclient = psycopg2.connect(
-            database='etl_raw_data',
-            user='airflow_user',
-            password='eserloqpbeq',
-            host='10.0.0.20'
-            )
+    #     dbclient = psycopg2.connect(
+    #         database='etl_raw_data',
+    #         user='airflow_user',
+    #         password='eserloqpbeq',
+    #         host='10.0.0.20'
+    #         )
         
-        cursor = dbclient.cursor()
+    #     cursor = dbclient.cursor()
 
-        s3 = s3client()
-        bucket = s3.Bucket('jobpostingchunks')
+    #     s3 = s3client()
+    #     bucket = s3.Bucket('jobpostingchunks')
 
-        for s3_obj in bucket.objects.all():
-            filename = s3_obj.key
-            download_path = '/tmp/{}'.format(filename)
-            bucket.download_file(filename, download_path)
-            df = pd.read_csv(download_path)
-            print("TO_DICT____________")
-            obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
-                          'job_level', 'job_type', 'company'])
+    #     for s3_obj in bucket.objects.all():
+    #         filename = s3_obj.key
+    #         download_path = '/tmp/{}'.format(filename)
+    #         bucket.download_file(filename, download_path)
+    #         df = pd.read_csv(download_path)
+    #         print("TO_DICT____________")
+    #         obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
+    #                       'job_level', 'job_type', 'company'])
             
-            print(obj.to_dict())
-            break
+    #         dicted = obj.to_dict()
+    #         for column in dicted:
+    #             for content in dicted[column]:
+    #                 print(dicted[column][content])
+    #                 try:
+    #                     cursor.execute(
+    #                         "INSERT INTO job (title, link, location, search_city, level, type, company_id)"
+    #                     )
+    #         break
             
         cursor.close()
         dbclient.close()
@@ -343,7 +357,7 @@ def etl():
     # extract_job_summary_chunks_to_s3()
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
-    prepare_db_to_jobposting_transform() >> transform_jobposting_chunk_to_db()
+    prepare_db_to_jobposting_transform() 
     
 
 etl()

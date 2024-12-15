@@ -11,8 +11,13 @@ Job table:
     search_city
     (job_level)level
     (job_type)type
-    (job_summary)summary(text)
+    got_summary boolean
+    summary_table_id
     company_table_id
+
+Summary table:
+    id
+    name
 
 Company table:
     id
