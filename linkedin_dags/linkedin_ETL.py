@@ -317,7 +317,7 @@ def etl():
     # extract_jobposting_chunks_to_s3()
     # extract_job_summary_chunks_to_s3()
 
-    prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
+    # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
     prepare_db_to_jobposting_transform() >> transform_jobposting_chunk_to_db()
     
 
