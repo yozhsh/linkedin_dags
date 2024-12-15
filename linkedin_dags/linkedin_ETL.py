@@ -478,9 +478,9 @@ def etl():
         extract_joblink_from_jobsummary_to_db()
                                 ]
     
-    extract_joblink_from_jobskill_to_db() >> insert_joblink_to_db()
-    extract_joblink_from_jobposting_to_db() >> insert_joblink_to_db()
-    extract_joblink_from_jobsummary_to_db() >> insert_joblink_to_db()
+    extract_joblink_from_jobskill_to_db() >> insert_joblink_to_db
+    extract_joblink_from_jobposting_to_db() >> insert_joblink_to_db
+    extract_joblink_from_jobsummary_to_db() >> insert_joblink_to_db
                                 
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
