@@ -326,7 +326,8 @@ def etl():
             df = pd.read_csv(download_path)
             obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
                           'job_level', 'job_type', 'job_summary', 'company'])
-            print(obj.to_json())
+            print(obj)
+            break
             
         cursor.close()
         dbclient.close()
