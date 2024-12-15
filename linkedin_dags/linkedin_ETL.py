@@ -300,8 +300,8 @@ def etl():
                 search_city VARCHAR (255),
                 level VARCHAR(255),
                 type VARCHAR (255),
-                got_summary BOOLEAN NOT NULL
-                summary_id INTEGER REFERENCES summary
+                got_summary BOOLEAN NOT NULL,
+                summary_id INTEGER REFERENCES summary,
                 company_id INTEGER REFERENCES company 
             )'''
         )
