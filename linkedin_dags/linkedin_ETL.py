@@ -376,6 +376,8 @@ def etl():
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
+
+        job_links = []
         for s3_obj in bucket.objects.all():
             filename = s3_obj.key
             download_path = '/tmp/{}'.format(filename)
@@ -383,10 +385,11 @@ def etl():
             df = pd.read_csv(download_path)
             joblink = df.get('job_link')
             links = joblink.to_list()
-            json_links = json.dumps(dict(job_links=links), indent=4)
-            print(json_links)
-            break
-        
+            job_links += links
+            
+
+        json_links = json.dumps(dict(job_links=job_links), indent=4)
+        print("DONE")
     
     @task()
     def extract_joblink_from_jobposting_to_db():
