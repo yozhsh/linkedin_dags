@@ -6,7 +6,7 @@ import os
 from airflow.decorators import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
-
+# в майбутньому додати класс для мапінгу csv до классу
 
 def s3client():
     import boto3
@@ -304,9 +304,29 @@ def etl():
 
     @task()
     def transform_jobposting_chunk_to_db():
-        pass
+        import pandas as pd
+        import psycopg2
 
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        
+        cursor = dbclient.cursor()
 
+        s3 = s3client()
+        bucket = s3.Bucket('jobpostingchunks')
+
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
+                          'job_level', 'job_type', 'job_summary', 'company']).to_dict()
+            print(obj)
 
 
 
