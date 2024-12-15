@@ -329,6 +329,9 @@ def etl():
             if obj:
                 print(obj.to_dict())
             
+        cursor.close()
+        dbclient.close()
+            
 
 
 
