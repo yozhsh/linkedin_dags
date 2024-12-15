@@ -372,15 +372,7 @@ def etl():
     @task()
     def extract_joblink_from_jobskill_to_db():
         import pandas as pd
-        import psycopg2
-
-        dbclient = psycopg2.connect(
-            database='etl_raw_data',
-            user='airflow_user',
-            password='eserloqpbeq',
-            host='10.0.0.20'
-            )
-        cursor = dbclient.cursor()
+        import json
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
@@ -390,8 +382,9 @@ def etl():
             bucket.download_file(filename, download_path)
             df = pd.read_csv(download_path)
             joblink = df.get('job_link')
-            links = joblink.to_json()
-            print(links)
+            links = joblink.to_list()
+            json_links = json.dumps(dict(job_links=links), indent=4)
+            print(json_links)
             break
         
         cursor.close()
