@@ -387,8 +387,6 @@ def etl():
             print(json_links)
             break
         
-        cursor.close()
-        dbclient.close()
     
     @task()
     def extract_joblink_from_jobposting_to_db():
