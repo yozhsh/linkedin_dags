@@ -279,7 +279,7 @@ def etl():
         cursor.execute(
             '''CREATE TABLE IF NOT EXISTS company (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR (255), UNIQUE
+                name VARCHAR (255) UNIQUE
             );'''
         )
 
