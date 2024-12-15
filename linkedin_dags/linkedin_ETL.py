@@ -210,12 +210,6 @@ def etl():
         cursor.close()
         dbclient.close()
 
-        
-#         CREATE TABLE IF NOT EXISTS skills (
-#     id      integer primary key,
-#     name    text not null, unique
-# )
-
 
     @task()
     def transform_jobskills_chunk_to_db():
@@ -253,13 +247,13 @@ def etl():
                 try:
                     cursor.execute(
                         "INSERT INTO skills (name) VALUES (%s)",
-                        (skill,))
+                        (skill.lstrip(),))
                     cursor.execute("commit")
                 except errors.lookup(IN_FAILED_SQL_TRANSACTION):
                     cursor.execute("rollback")
                     cursor.execute(
                         "INSERT INTO skills (name) VALUES (%s)",
-                        (skill,))
+                        (skill.lstrip(),))
                     cursor.execute("commit")    
                 except errors.lookup(UNIQUE_VIOLATION):
                     cursor.execute("rollback")
@@ -267,25 +261,52 @@ def etl():
                 except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
                     cursor.execute("rollback")
                     continue
-            # try: 
-            #     lst_of_str = parse_string(job_skills[0])
-            #     try:
-            #         for skill in lst_of_str:
-            #             execute_values(
-            #             cursor,
-            #             "INSERT INTO skills (name) VALUES %s",
-            #             skill
-            #         )
-            #             dbclient.commit()
-            #     except errors.lookup(UNIQUE_VIOLATION):
-            #         dbclient.rollback()
-            #         continue
-# Доделать, сохраняет побуквенно а не построчно :\
-        
         cursor.close()
         dbclient.close()
 
+    @task()
+    def prepare_db_to_jobposting_transform():
+        import psycopg2
 
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS company (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR (255), UNIQUE
+            );
+            '''
+        )
+
+        dbclient.commit()
+
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS job (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR (255),
+                link VARCHAR (500) UNIQUE,
+                location VARCHAR (255),
+                search_city VARCHAR (255),
+                level VARCHAR(255),
+                type VARCHAR (255),
+                summary TEXT,
+                company_id INTEGER REFERENCES company 
+            );
+            '''
+        )
+        dbclient.commit()
+        cursor.close()
+        dbclient.close()
+
+    @task()
+    def transform_jobposting_chunk_to_db():
+        pass
 
 
 
@@ -297,7 +318,7 @@ def etl():
     # extract_job_summary_chunks_to_s3()
 
     prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
-    
+    prepare_db_to_jobposting_transform() >> transform_jobposting_chunk_to_db()
     
 
 etl()
