@@ -5,7 +5,7 @@
 Job table:
     id
     title
-    link unique=True
+    link_table_id
     uuid index=True
     job_location
     search_city
@@ -14,6 +14,10 @@ Job table:
     got_summary boolean
     summary_table_id
     company_table_id
+
+JobLink table:
+    id
+    link
 
 Summary table:
     id

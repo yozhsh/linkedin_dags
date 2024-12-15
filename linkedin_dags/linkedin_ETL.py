@@ -348,16 +348,120 @@ def etl():
         cursor.close()
         dbclient.close()
             
+    @task()
+    def prepare_db_to_joblink():
+        import psycopg2
 
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS joblink (
+                id SERIAL PRIMARY KEY,
+                link VARCHAR (500) NOT NULL UNIQUE
+            )'''
+        )
+        dbclient.commit()
+        cursor.close()
+        dbclient.close()
+    
+    @task()
+    def extract_joblink_from_jobskill_to_db():
+        import pandas as pd
+        import psycopg2
 
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobskillchunks')
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            joblink = df.get('job_link')
+            dicted = joblink.to_dict()
+            print(dicted)
+        
+        cursor.close()
+        dbclient.close()
+    
+    @task()
+    def extract_joblink_from_jobposting_to_db():
+        import pandas as pd
+        import psycopg2
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        s3 = s3client()
+
+        bucket = s3.Bucket('jobpostingchunks')
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            joblink = df.get('job_link')
+            dicted = joblink.to_dict()
+            print(dicted)
+        
+        cursor.close()
+        dbclient.close()
+    
+    @task()
+    def extract_joblink_from_jobsummary_to_db():
+        import pandas as pd
+        import psycopg2
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobsummarychunks')
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            joblink = df.get('job_link')
+            dicted = joblink.to_dict()
+            print(dicted)
+        
+        cursor.close()
+        dbclient.close()
 
 
     # extract_jobskills_chunks_to_s3() >> create_table_skills >> transform_jobskills_chunk_to_db() 
     # extract_jobposting_chunks_to_s3()
     # extract_job_summary_chunks_to_s3()
+    
+    prepare_db_to_joblink() >> extract_joblink_from_jobskill_to_db()
+    prepare_db_to_joblink() >> extract_joblink_from_jobposting_to_db()
+    prepare_db_to_joblink() >> extract_joblink_from_jobsummary_to_db()
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
-    prepare_db_to_jobposting_transform() 
+    # prepare_db_to_jobposting_transform() 
     
 
 etl()
