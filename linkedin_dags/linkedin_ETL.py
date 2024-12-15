@@ -372,7 +372,6 @@ def etl():
     @task()
     def extract_joblink_from_jobskill_to_db():
         import pandas as pd
-        import json
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
@@ -387,25 +386,16 @@ def etl():
             links = joblink.to_list()
             job_links += links
             
-
-        json_links = json.dumps(dict(job_links=job_links), indent=4)
-        print("DONE")
+        return dict(job_links=job_links)
     
+
     @task()
     def extract_joblink_from_jobposting_to_db():
         import pandas as pd
-        import psycopg2
-
-        dbclient = psycopg2.connect(
-            database='etl_raw_data',
-            user='airflow_user',
-            password='eserloqpbeq',
-            host='10.0.0.20'
-            )
-        cursor = dbclient.cursor()
 
         s3 = s3client()
 
+        job_links = []
         bucket = s3.Bucket('jobpostingchunks')
         for s3_obj in bucket.objects.all():
             filename = s3_obj.key
@@ -414,16 +404,36 @@ def etl():
             df = pd.read_csv(download_path)
             joblink = df.get('job_link')
             links = joblink.to_list()
-            print(links)
-            break
+            job_links += links
         
-        cursor.close()
-        dbclient.close()
+        return dict(job_links=job_links)
     
+
     @task()
     def extract_joblink_from_jobsummary_to_db():
         import pandas as pd
+
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobsummarychunks')
+
+        job_links = []
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            joblink = df.get('job_link')
+            links = joblink.to_list()
+            job_links += links
+
+        return dict(job_links=job_links)        
+
+    @task()
+    def insert_joblink_to_db(links: dict):
         import psycopg2
+        from psycopg2 import errors
+        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION, STRING_DATA_RIGHT_TRUNCATION
 
         dbclient = psycopg2.connect(
             database='etl_raw_data',
@@ -433,28 +443,36 @@ def etl():
             )
         cursor = dbclient.cursor()
 
-        s3 = s3client()
-        bucket = s3.Bucket('jobsummarychunks')
-        for s3_obj in bucket.objects.all():
-            filename = s3_obj.key
-            download_path = '/tmp/{}'.format(filename)
-            bucket.download_file(filename, download_path)
-            df = pd.read_csv(download_path)
-            joblink = df.get('job_link')
-            links = joblink.to_list()
-            print(links)
-            break
+        for link in links['job_links']:
+            try:
+                cursor.execute(
+                    "INSERT INTO joblink (name) VALUES (%s)",
+                    (link.lstrip(),)
+                )
+                cursor.execute("commit")
+            except errors.lookup(IN_FAILED_SQL_TRANSACTION):
+                cursor.execute("rollback")
+                cursor.execute(
+                    "INSERT INTO joblink (name) VALUES (%s)",
+                    (link.lstrip(),)
+            )
+                cursor.execute("commit")
+            except errors.lookup(UNIQUE_VIOLATION):
+                cursor.execute("rollback")
+                continue
+            except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
+                cursor.execute("rollback")
+                continue
         
         cursor.close()
         dbclient.close()
-
 
 
     # extract_jobskills_chunks_to_s3() >> create_table_skills >> transform_jobskills_chunk_to_db() 
     # extract_jobposting_chunks_to_s3()
     # extract_job_summary_chunks_to_s3()
     
-    prepare_db_to_joblink() >> [extract_joblink_from_jobskill_to_db(), extract_joblink_from_jobposting_to_db(), extract_joblink_from_jobsummary_to_db()]
+    prepare_db_to_joblink() >> [insert_joblink_to_db(extract_joblink_from_jobskill_to_db()), insert_joblink_to_db(extract_joblink_from_jobposting_to_db()), insert_joblink_to_db(extract_joblink_from_jobsummary_to_db())]
 
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
