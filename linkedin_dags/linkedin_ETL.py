@@ -280,8 +280,7 @@ def etl():
             '''CREATE TABLE IF NOT EXISTS company (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR (255), UNIQUE
-            );
-            '''
+            );'''
         )
 
         dbclient.commit()
@@ -297,8 +296,7 @@ def etl():
                 type VARCHAR (255),
                 summary TEXT,
                 company_id INTEGER REFERENCES company 
-            );
-            '''
+            );'''
         )
         dbclient.commit()
         cursor.close()
