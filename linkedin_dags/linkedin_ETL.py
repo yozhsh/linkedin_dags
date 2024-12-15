@@ -392,6 +392,7 @@ def etl():
             joblink = df.get('job_link')
             dicted = joblink.to_dict()
             print(dicted)
+            break
         
         cursor.close()
         dbclient.close()
@@ -420,6 +421,7 @@ def etl():
             joblink = df.get('job_link')
             dicted = joblink.to_dict()
             print(dicted)
+            break
         
         cursor.close()
         dbclient.close()
@@ -447,6 +449,7 @@ def etl():
             joblink = df.get('job_link')
             dicted = joblink.to_dict()
             print(dicted)
+            break
         
         cursor.close()
         dbclient.close()
@@ -457,7 +460,7 @@ def etl():
     # extract_job_summary_chunks_to_s3()
     
     prepare_db_to_joblink() >> [extract_joblink_from_jobskill_to_db(), extract_joblink_from_jobposting_to_db(), extract_joblink_from_jobsummary_to_db()]
-    
+
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
     # prepare_db_to_jobposting_transform() 
