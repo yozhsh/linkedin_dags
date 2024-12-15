@@ -326,7 +326,7 @@ def etl():
             df = pd.read_csv(download_path)
             print("TO_DICT____________")
             obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
-                          'job_level', 'job_type', 'job_summary', 'company'])
+                          'job_level', 'job_type', 'company'])
             
             print(obj)
             break
