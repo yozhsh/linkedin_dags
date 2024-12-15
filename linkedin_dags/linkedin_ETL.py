@@ -327,7 +327,7 @@ def etl():
             # obj = df.get(['job_title', 'job_link', 'job_location', 'search_city', 
             #               'job_level', 'job_type', 'job_summary', 'company'])
             obj = df.get('job_title')
-            print(obj)
+            print(obj.to_dict())
             break
             
         cursor.close()
