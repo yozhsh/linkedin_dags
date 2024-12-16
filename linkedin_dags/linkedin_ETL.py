@@ -264,7 +264,7 @@ def etl():
         dbclient.close()
 
     @task()
-    def prepare_db_to_jobposting_transform():
+    def prepare_db_to_jobposting():
         import psycopg2
 
         dbclient = psycopg2.connect(
@@ -275,21 +275,6 @@ def etl():
             )
         cursor = dbclient.cursor()
 
-        cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS company (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR (255) UNIQUE
-            )'''
-        )
-
-        cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS summary (
-                id SERIAL PRIMARY KEY,
-                name TEXT
-            )'''
-        )
-
-        dbclient.commit()
 
         cursor.execute(
             '''CREATE TABLE IF NOT EXISTS job (
@@ -370,8 +355,14 @@ def etl():
         dbclient.close()
     
     @task()
+    def prepare_buckets_to_joblink():
+        s3 = s3client()
+        s3.create_bucket(Bucket='joblink')
+    
+    @task()
     def extract_joblink_from_jobskill_to_db():
         import pandas as pd
+        import json
 
         s3 = s3client()
         bucket = s3.Bucket('jobskillchunks')
@@ -385,8 +376,16 @@ def etl():
             joblink = df.get('job_link')
             links = joblink.to_list()
             job_links += links
+            break
             
-        return dict(job_links=job_links)
+        data = {'job_links': job_links}
+        json_data = json.dumps(data).encode('UTF-8')
+        json_fname = 'joblink_1.json'
+        s3_Obj = s3.Object('joblink', json_fname)
+        s3_Obj.put(
+            Body=(bytes(json_data))
+        )
+        return json_fname
     
 
     @task()
@@ -405,8 +404,16 @@ def etl():
             joblink = df.get('job_link')
             links = joblink.to_list()
             job_links += links
+            break
         
-        return dict(job_links=job_links)
+        data = {'job_links': job_links}
+        json_data = json.dumps(data).encode('UTF-8')
+        json_fname = 'joblink_2.json'
+        s3_Obj = s3.Object('joblink', json_fname)
+        s3_Obj.put(
+            Body=(bytes(json_data))
+        )
+        return json_fname
     
 
     @task()
@@ -426,11 +433,217 @@ def etl():
             joblink = df.get('job_link')
             links = joblink.to_list()
             job_links += links
+            break
 
-        return dict(job_links=job_links)        
+        data = {'job_links': job_links}
+        json_data = json.dumps(data).encode('UTF-8')
+        json_fname = 'joblink_3.json'
+        s3_Obj = s3.Object('joblink', json_fname)
+        s3_Obj.put(
+            Body=(bytes(json_data))
+        )
+        return json_fname        
+    
 
     @task()
-    def insert_joblink_to_db(links: dict):
+    def insert_joblink_to_db(data):
+        import json
+        import psycopg2
+        from psycopg2 import errors
+        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION, STRING_DATA_RIGHT_TRUNCATION
+
+
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        s3 = s3client()
+        bucket = s3.Bucket('joblink')
+        
+        for fname in data:
+            download_path = '/tmp/{}'.format(fname)
+            bucket.download_file(fname, download_path)
+            with open(download_path) as f:
+                json_data = json.load(f)
+                for link in json_data['job_links']:                        
+                    try:
+                        cursor.execute(
+                            "INSERT INTO joblink (link) VALUES (%s)",
+                            (link.lstrip(), ))
+                        cursor.execute('commit')
+                    except errors.lookup(IN_FAILED_SQL_TRANSACTION):
+                        cursor.execute("rollback")
+                        cursor.execute(
+                            "INSERT INTO joblink (link) VALUES (%s)",
+                            (link.lstrip(), ))
+                        cursor.execute('commit')
+                    except errors.lookup(UNIQUE_VIOLATION):
+                        cursor.execute("rollback")
+                        continue
+                    except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
+                        cursor.execute("rollback")
+                        continue
+            
+        cursor.close()
+        dbclient.close()
+    
+
+    @task()
+    def prepare_bucket_to_summary():
+        s3 = s3client()
+        s3.create_bucket(Bucket='jobsummary')
+
+    @task()
+    def prepare_db_to_summary():
+        import psycopg2
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS summary (
+                id SERIAL PRIMARY KEY,
+                name TEXT
+            )'''
+        )
+        dbclient.commit()
+        cursor.close()
+        dbclient.close()
+
+    @task()
+    def extract_summary_from_jobsummary():
+        import pandas as pd
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobsummarychunks')
+        
+        job_summary = []
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            jobsummary = df.get('job_summary')
+            summary = jobsummary.to_list()
+            job_summary += summary
+            break
+
+        data = {'summary': job_summary}
+        json_data = json.dumps(data).encode('UTF-8')
+        json_fname = 'jobsummary.json'
+        s3_Obj = s3.Object('jobsummary', json_fname)
+        s3_Obj.put(
+            Body=(bytes(json_data))
+        )
+        return json_fname
+
+    @task()
+    def insert_summary_to_db(summary_fname):
+        import json
+        import psycopg2
+        from psycopg2 import errors
+        from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION, STRING_DATA_RIGHT_TRUNCATION
+
+
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobsummary')
+        download_path = '/tmp/{}'.format(summary_fname)
+        bucket.download_file(summary_fname, download_path)
+        with open(download_path) as f:
+            json_data = json.load(f)
+            for summary in json_data['summary']:
+                try:
+                    cursor.execute(
+                        "INSERT INTO summary (name) VALUES (%s)",
+                        (summary.lstrip(), ))
+                    cursor.execute('commit')
+                except errors.lookup(IN_FAILED_SQL_TRANSACTION):
+                    cursor.execute("rollback")
+                    cursor.execute(
+                        "INSERT INTO summary (name) VALUES (%s)",
+                        (summary.lstrip(), ))
+                    cursor.execute('commit')
+                except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
+                    cursor.execute("rollback")
+                    continue
+        
+        cursor.close()
+        dbclient.close()
+    
+    @task()
+    def prepare_db_to_company():
+        import psycopg2
+
+        dbclient = psycopg2.connect(
+            database='etl_raw_data',
+            user='airflow_user',
+            password='eserloqpbeq',
+            host='10.0.0.20'
+            )
+        cursor = dbclient.cursor()
+        cursor.execute(
+            '''CREATE TABLE IF NOT EXISTS company (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR (255) UNIQUE
+            )'''
+        )
+        dbclient.commit()
+        cursor.close()
+        dbclient.close()
+    
+    @task()
+    def prepare_bucket_to_company():
+        s3 = s3client()
+        s3.create_bucket(Bucket='jobcompany')
+    
+    @task()
+    def extract_jobcompany():
+        import pandas as pd
+        import json
+
+        s3 = s3client()
+        bucket = s3.Bucket('jobpostingchunks')
+        job_companies = []
+        for s3_obj in bucket.objects.all():
+            filename = s3_obj.key
+            download_path = '/tmp/{}'.format(filename)
+            bucket.download_file(filename, download_path)
+            df = pd.read_csv(download_path)
+            company = df.get('company')
+            companies = company.to_list()
+            job_companies += companies
+            break
+        
+        data = {'company': job_companies}
+        json_data = json.dumps(data).encode('UTF-8')
+        json_fname = 'jobcompanies.json'
+        s3_Obj = s3.Object('jobcompany', json_fname)
+        s3_Obj.put(
+            Body=(bytes(json_data))
+        )
+        return json_fname
+    
+    @task()
+    def insert_company_to_db(company_fname):
+        import json
         import psycopg2
         from psycopg2 import errors
         from psycopg2.errorcodes import UNIQUE_VIOLATION, IN_FAILED_SQL_TRANSACTION, STRING_DATA_RIGHT_TRUNCATION
@@ -443,45 +656,55 @@ def etl():
             )
         cursor = dbclient.cursor()
 
-        for link in links['job_links']:
-            try:
-                cursor.execute(
-                    "INSERT INTO joblink (name) VALUES (%s)",
-                    (link.lstrip(),)
-                )
-                cursor.execute("commit")
-            except errors.lookup(IN_FAILED_SQL_TRANSACTION):
-                cursor.execute("rollback")
-                cursor.execute(
-                    "INSERT INTO joblink (name) VALUES (%s)",
-                    (link.lstrip(),)
-            )
-                cursor.execute("commit")
-            except errors.lookup(UNIQUE_VIOLATION):
-                cursor.execute("rollback")
-                continue
-            except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
-                cursor.execute("rollback")
-                continue
+        s3 = s3client()
+        bucket = s3.Bucket('jobcompany')
+        download_path = '/tmp/{}'.format(company_fname)
+        bucket.download_file(company_fname, download_path)
+
+        with open(download_path) as f:
+            json_data = json.load(f)
+            for company in json_data['company']:
+                try:
+                    cursor.execute(
+                        "INSERT INTO company (name) VALUES (%s)",
+                        (company.lstrip(), ))
+                    cursor.execute('commit')
+                except errors.lookup(IN_FAILED_SQL_TRANSACTION):
+                    cursor.execute("rollback")
+                    cursor.execute(
+                        "INSERT INTO company (name) VALUES (%s)",
+                        (company.lstrip(), ))
+                    cursor.execute('commit')
+                except errors.lookup(UNIQUE_VIOLATION):
+                        cursor.execute("rollback")
+                        continue
+                except errors.lookup(STRING_DATA_RIGHT_TRUNCATION):
+                    cursor.execute("rollback")
+                    continue
         
         cursor.close()
         dbclient.close()
+        
+        
+    
+    ## EXAMPLEEEEE process_all(test_start() >> [paralel_1(), paralel_2(), paralel_3()])
 
+    # ITS WORKEEED!!! insert_joblink_to_db(prepare_buckets_to_joblink() >> prepare_db_to_joblink() >> [
+    #     extract_joblink_from_jobskill_to_db(),
+    #     extract_joblink_from_jobposting_to_db(),
+    #     extract_joblink_from_jobsummary_to_db()
+    # ])
+
+    # WORKEEEED prepare_bucket_to_summary() >> prepare_db_to_summary() >> insert_summary_to_db(extract_summary_from_jobsummary())
+    
+    prepare_bucket_to_company() >> prepare_db_to_company() >> insert_company_to_db(extract_jobcompany())
 
     # extract_jobskills_chunks_to_s3() >> create_table_skills >> transform_jobskills_chunk_to_db() 
     # extract_jobposting_chunks_to_s3()
     # extract_job_summary_chunks_to_s3()
     
-    prepare_db_to_joblink() >> [
-        extract_joblink_from_jobskill_to_db(),
-        extract_joblink_from_jobposting_to_db(),
-        extract_joblink_from_jobsummary_to_db()
-                                ]
-    
-    extract_joblink_from_jobskill_to_db() >> insert_joblink_to_db
-    extract_joblink_from_jobposting_to_db() >> insert_joblink_to_db
-    extract_joblink_from_jobsummary_to_db() >> insert_joblink_to_db
-                                
+
+
 
     # prepare_db_to_jobskill_transform() >> transform_jobskills_chunk_to_db()
     # prepare_db_to_jobposting_transform() 
